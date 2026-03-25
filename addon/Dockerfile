@@ -7,33 +7,33 @@
 #COPY --from=govee2mqtt /app/AmazonRootCA1.pem /app/
 #CMD [ "/run.sh" ]
 
-ARG BUILD_FROM
-FROM $BUILD_FROM AS build
+ARG GOVEE_REPO=https://github.com/emmvaueff/govee2mqtt.git
+ARG GOVEE_REF=main
 
-# Install build dependencies
+FROM rust:bookworm AS build
+
+ARG GOVEE_REPO
+ARG GOVEE_REF
+
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        curl \
-        build-essential \
-        pkg-config \
-        libssl-dev \
-        ca-certificates \
-        git \
-        rustc \
-        cargo && \
-    rm -rf /var/lib/apt/lists/*
+	apt-get install -y --no-install-recommends \
+		build-essential \
+		pkg-config \
+		libssl-dev \
+		ca-certificates \
+		git && \
+	rm -rf /var/lib/apt/lists/*
 
-# Copy source
-COPY . /src
 WORKDIR /src
-
-# Build govee2mqtt
+RUN git clone --depth 1 --branch ${GOVEE_REF} ${GOVEE_REPO} /src
 RUN cargo build --release
 
-# Runtime image
-FROM $BUILD_FROM
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:bookworm
+FROM ${BUILD_FROM}
 
 COPY run.sh /run.sh
-COPY --from=build /src/target/release/govee2mqtt /app/govee2mqtt
+COPY --from=build /src/target/release/govee /app/govee
+COPY --from=build /src/assets /app/assets/
+COPY --from=build /src/AmazonRootCA1.pem /app/
 
 CMD [ "/run.sh" ]
