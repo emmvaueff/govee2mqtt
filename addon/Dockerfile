@@ -7,8 +7,9 @@
 #COPY --from=govee2mqtt /app/AmazonRootCA1.pem /app/
 #CMD [ "/run.sh" ]
 
-ARG GOVEE_REPO=https://github.com/emmvaueff/govee2mqtt.git
+RG GOVEE_REPO=https://github.com/emmvaueff/govee2mqtt.git
 ARG GOVEE_REF=main
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:bookworm
 
 FROM rust:bookworm AS build
 
@@ -28,7 +29,6 @@ WORKDIR /src
 RUN git clone --depth 1 --branch ${GOVEE_REF} ${GOVEE_REPO} /src
 RUN cargo build --release
 
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:bookworm
 FROM ${BUILD_FROM}
 
 COPY run.sh /run.sh
@@ -37,3 +37,4 @@ COPY --from=build /src/assets /app/assets/
 COPY --from=build /src/AmazonRootCA1.pem /app/
 
 CMD [ "/run.sh" ]
+
