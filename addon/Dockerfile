@@ -7,7 +7,7 @@
 #COPY --from=govee2mqtt /app/AmazonRootCA1.pem /app/
 #CMD [ "/run.sh" ]
 
-RG GOVEE_REPO=https://github.com/emmvaueff/govee2mqtt.git
+ARG GOVEE_REPO=https://github.com/emmvaueff/govee2mqtt.git
 ARG GOVEE_REF=main
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-debian:bookworm
 
